@@ -27,7 +27,8 @@
                            iam.googleapis.com \
                            container.googleapis.com \
                            gkehub.googleapis.com \
-                           anthosconfigmanagement.googleapis.com
+                           anthosconfigmanagement.googleapis.com \
+                           sqladmin.googleapis.com
     ```
 
 1. Create storage bucket that will be used to keep Terraform state:
@@ -61,8 +62,24 @@
 1. Create cluster using terraform:
 
     ```bash
-    terraform plan -var="project=ami-abc123" \
+    # continue in /deploy directory
+    terraform plan -var="project=$PROJECT_ID" \
                    -var="sync_repo=https://github.com/AlexBulankou/gke-acm-tf" \
                    -var="sync_branch=main" \
                    -var="policy_dir=csproot" \
                    -var="bucket=$PROJECT_ID-tfstate"
+
+    terraform apply -var="project=$PROJECT_ID" \
+                    -var="sync_repo=https://github.com/AlexBulankou/gke-acm-tf" \
+                    -var="sync_branch=main" \
+                    -var="policy_dir=csproot" \
+                    -var="bucket=$PROJECT_ID-tfstate"
+    ```
+
+1. Validate that Wordpress instance was created
+
+    ```bash
+    gcloud container clusters get-credentials cluster-1 --region=us-central1-b
+    kubectl get service wordpress-external -n=service-a
+    ping [external-ip]
+    ```

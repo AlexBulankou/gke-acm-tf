@@ -1,5 +1,5 @@
 apiVersion: v1
 appVersion: "1.0"
-description: A Helm chart to deploy ConfigConnector addon
-name: kcc-addon
+description: A Helm chart to deploy Config-sync annotated namespace
+name: config-sync-namespace
 version: 0.1.0

@@ -5,20 +5,3 @@
 google:
   projectId:
   namespace:
-  region: us-central1
-
-database:
-  instanceName: wp-db
-  dbName: wordpress
-  version: MYSQL_5_7
-  tier: db-f1-micro
-  user: wordpress
-  password: change-me
-
-wordpress:
-  image: wordpress:5.2.2-apache
-  storage: 10Gi
-  resources:
-    limits:
-      cpu: "200m"
-      memory: "100Mi"

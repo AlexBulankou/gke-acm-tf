@@ -37,7 +37,32 @@
     gsutil versioning set on gs://${PROJECT_ID}-tfstate # enable versioning to keep history
     ```
 
-1. Terraform init:
+1. Initialize your csproot folder using Helm and customized values:
 
     ```bash
-    terraform init -backend-config "bucket=$PROJECT_ID-state"
+    helm template ./templates/wp-chart/ --set google.projectId=$PROJECT_ID --set google.namespace=service-a \
+        > ./csproot/namespaces/service-a/wp.yaml
+    helm template ./templates/config-sync-namespace/ --set google.projectId=$PROJECT_ID --set google.namespace=service-a \
+        > ./csproot/namespaces/service-a/namespace.yaml
+    helm template ./templates/configconnector/ --set google.projectId=$PROJECT_ID \
+        > ./csproot/cluster/configconnector.yaml
+    ```
+
+1. Submit your changes to git.
+
+1. Initialize Terraform with the backend in the specified bucket:
+
+    ```bash
+    cd deploy/
+    gcloud auth application-default login
+    terraform init -backend-config "bucket=$PROJECT_ID-tfstate"
+    ```
+
+1. Create cluster using terraform:
+
+    ```bash
+    terraform plan -var="project=ami-abc123" \
+                   -var="sync_repo=https://github.com/AlexBulankou/gke-acm-tf" \
+                   -var="sync_branch=main" \
+                   -var="policy_dir=csproot" \
+                   -var="bucket=$PROJECT_ID-tfstate"

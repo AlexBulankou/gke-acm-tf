@@ -14,6 +14,10 @@ variable "policy_dir" {
   type = string
 }
 
+variable "bucket" {
+  type = string
+}
+
 locals {
   region = "us-central1"
   zone   = "us-central1-b"
@@ -25,54 +29,6 @@ provider "google-beta" {
   project = var.project
 }
 
-resource "google_project_service" "iamservice" {
-  project = var.project
-  service = "iam.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-resource "google_project_service" "crmservice" {
-  project = var.project
-  service = "cloudresourcemanager.googleapis.com"
-
-  disable_dependent_services = true
-}
-
-
-resource "google_project_service" "containerservice" {
-  project = var.project
-  service = "container.googleapis.com"
-
-  disable_dependent_services = true
-
-  depends_on = [
-    google_project_service.crmservice,
-    google_project_service.iamservice
-  ]
-}
-
-resource "google_project_service" "gkehubservice" {
-  project = var.project
-  service = "gkehub.googleapis.com"
-
-  disable_dependent_services = true
-
-  depends_on = [
-    google_project_service.containerservice
-  ]
-}
-
-resource "google_project_service" "acmservice" {
-  project = var.project
-  service = "anthosconfigmanagement.googleapis.com"
-
-  disable_dependent_services = true
-
-  depends_on = [
-    google_project_service.containerservice
-  ]
-}
 
 resource "google_container_cluster" "primary" {
   provider = google-beta
@@ -103,12 +59,7 @@ resource "google_container_cluster" "primary" {
     config_connector_config {
       enabled = true
     }
-}
-
-  depends_on = [
-    google_project_service.containerservice,
-    google_project_service.gkehubservice
-  ]
+  }
 }
 
 resource "google_container_node_pool" "primary_preemptible_nodes" {
@@ -168,19 +119,12 @@ resource "google_gke_hub_membership" "membership" {
       resource_link = "//container.googleapis.com/${google_container_cluster.primary.id}"
     }
   }
-  depends_on = [
-    google_project_service.gkehubservice
-  ]
   provider = google-beta
 }
 
 resource "google_gke_hub_feature" "acm_feature" {
   name = "configmanagement"
   location = "global"
-  depends_on = [
-    google_project_service.gkehubservice,
-    google_project_service.acmservice
-  ]
   provider = google-beta
 }
 
@@ -199,8 +143,5 @@ resource "google_gke_hub_feature_membership" "acm_feature_member" {
       }
     }
   }
-  depends_on = [
-    google_project_service.gkehubservice
-  ]
   provider = google-beta
 }
